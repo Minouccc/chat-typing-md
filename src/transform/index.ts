@@ -14,42 +14,10 @@ type TransformFunction<T = any> = (
   ...args: any
 ) => TransformResult;
 
-export const parseJsonLikeData = (content) => {
-  if (content.startsWith("data: ")) {
-    const dataString = content.substring(6).trim();
-    if (dataString === "[DONE]") {
-      return {
-        done: true,
-      };
-    }
-    try {
-      return JSON.parse(dataString);
-    } catch (error) {
-      console.error("JSON parsing error:", error);
-    }
-  }
-  return null;
-};
-
-/**
- * 大模型映射列表
- */
-export const LLMTypes = [
-  {
-    label: "模拟数据模型",
-    modelName: "standard",
-  },
-] as const;
-
-export type TransformStreamModelTypes = (typeof LLMTypes)[number]["modelName"];
-
 /**
  * 用于处理不同类型流的值转换器
  */
-export const transformStreamValue: Record<
-  TransformStreamModelTypes,
-  TransformFunction
-> = {
+export const transformStreamValue: Record<string, TransformFunction> = {
   standard(readValue: Uint8Array, textDecoder: TextDecoder) {
     let content = "";
     if (readValue instanceof Uint8Array) {

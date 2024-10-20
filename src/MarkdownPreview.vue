@@ -10,7 +10,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   reader: null,
 });
-const emit = defineEmits(["failed", "completed", "update:reader"]);
 
 let typingAnimationFrame: number | null = null;
 const displayText = ref("");
@@ -23,8 +22,6 @@ const renderedContent = computed(() => {
   return `${renderedMarkdown.value}`;
 });
 const readIsOver = ref(false);
-const isAbort = ref(false);
-const isCompleted = ref(false);
 
 /**
  * 读取 buffer 内容，逐字追加到 displayText
@@ -40,12 +37,6 @@ const runReadBuffer = (readCallback = () => {}, endCallback = () => {}) => {
   }
 };
 const showText = () => {
-  if (isAbort.value && typingAnimationFrame) {
-    cancelAnimationFrame(typingAnimationFrame);
-    typingAnimationFrame = null;
-    return;
-  }
-
   // 若 reader 还没结束，则保持打字行为
   if (!readIsOver.value) {
     runReadBuffer();
@@ -58,9 +49,6 @@ const showText = () => {
       },
       () => {
         alert("finished!!!");
-        emit("update:reader", null);
-        emit("completed");
-        isCompleted.value = true;
         nextTick(() => {
           readIsOver.value = false;
         });
@@ -76,9 +64,6 @@ const readTextStream = async () => {
   const textDecoder = new TextDecoder("utf-8");
 
   while (true) {
-    if (isAbort.value) {
-      break;
-    }
     try {
       if (!props.reader) {
         readIsOver.value = true;
@@ -111,10 +96,8 @@ const readTextStream = async () => {
       }
     } catch (error) {
       readIsOver.value = true;
-      emit("failed", error);
       break;
     } finally {
-      // initializeEnd();
     }
   }
 };
